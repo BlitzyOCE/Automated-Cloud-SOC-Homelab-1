@@ -35,9 +35,9 @@ When malicious software (like Mimikatz) runs on a Windows11 VM (an endpoint that
 Here's what happens when Mimikatz  runs on the Windows endpoint:
 
 ### Step 1: Detection
-- Sysmon on Windows detects the suspicious process access (Event ID 10)
+- Sysmon on Windows detects the suspicious process access
 - Wazuh agent forwards the log to the SIEM server
-- My custom detection rule (ID: 100002) triggers an alert
+- My custom detection rule triggers an alert
 
 ### Step 2: Enrichment
 - Shuffle receives the alert via webhook
