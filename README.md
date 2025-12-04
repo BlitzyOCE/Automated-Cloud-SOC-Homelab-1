@@ -68,7 +68,7 @@ Some configurations will be made available in the config folder.
 
 I started by setting up a Windows 11 virtual machine in VirtualBox to serve as my endpoint. Windows 11 has strict hardware requirements, so I used registry modifications to bypass the TPM and Secure Boot checks. Once the VM was running, I disabled Windows Defender completely since I needed to test malware detection without interference from built-in antivirus.
 
-![alt text](winvm.png)
+![alt text](images/winvm.png)
 
 **Deploying Cloud Infrastructure**
 
@@ -101,7 +101,7 @@ I configured firewall rules to open the necessary ports for agent communication:
 
 On my Windows 11 VM, I installed the Wazuh agent and configured it to point to my Wazuh server's IP address.
 
-![agent](wazuh-agents.png)
+![agent](images/wazuh-agents.png)
 
 **Configuring Log Archiving**
 
@@ -113,7 +113,7 @@ I created a custom detection rule to detect Mimikatz execution. The rule monitor
 
 After creating the rule in `/var/ossec/etc/rules/local_rules.xml` and restarting the Wazuh manager, I tested it by running Mimikatz on my Windows VM. The alert appeared successfully in the wazuh-alerts index.
 
-![wazuh](wazuh-alerts.png)
+![wazuh](images/wazuh-alerts.png)
 
 ### Phase 5: Deploying TheHive
 
@@ -135,11 +135,11 @@ Once TheHive was running, I created a new organization called "SocAutmation" for
 
 Both accounts were given the analyst profile to create and manage alerts.
 
-![alt text](the-hive-1.png)
+![alt text](images/the-hive-1.png)
 
 ### Phase 6: Building the Shuffle Workflow
 
-![Shuffle Topology](shuffle.png)
+![Shuffle Topology](images/shuffle.png)
 
 **Setting Up the Webhook**
 
@@ -174,7 +174,7 @@ I added the TheHive action to automatically create alerts. The action uses:
 
 The alert payload includes details from Wazuh, VirusTotal results, MITRE ATT&CK tags, severity levels, and host information.
 
-![alt text](hive-alert.png)
+![alt text](images/hive-alert.png)
 
 ### Phase 9: Adding Email Notifications
 
