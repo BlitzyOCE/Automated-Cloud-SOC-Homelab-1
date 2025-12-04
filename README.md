@@ -14,7 +14,7 @@ When malicious software (like Mimikatz) runs on a Windows11 VM (an endpoint that
 
 ## Architecture
 
-![Topology Diagram](images/topology-diagram.png)
+![Topology Diagram](images/topology.png)
 
 ## Tools Used
 
@@ -43,14 +43,13 @@ Here's what happens when Mimikatz  runs on the Windows endpoint:
 - Shuffle receives the alert via webhook
 - Extracts the file hash from the alert
 - Queries VirusTotal API for threat intelligence
-- **Result:** 64 out of 72 antivirus engines flagged it as malicious
 
 ### Step 3: Notification & Ticketing
 - Automated email sent to SOC team with alert details
 - Case automatically created in TheHive with:
   - Alert description and severity
   - VirusTotal results
-  - MITRE ATT&CK technique tag (T1003)
+  - MITRE ATT&CK technique tag
   - Host information
 
 ### Step 4: Response
@@ -58,15 +57,18 @@ Here's what happens when Mimikatz  runs on the Windows endpoint:
 - Investigates scope and decides on remediation
 - Documents actions in TheHive case
 
-## Building This Lab - Step by Step
+## Building This Lab Step by Step
 
 This section walks through how I built this SOC automation lab from scratch.
+Some configurations will be made available in the config folder.
 
 ### Phase 1: Setting Up the Infrastructure
 
 **Creating the Windows 11 VM**
 
 I started by setting up a Windows 11 virtual machine in VirtualBox to serve as my endpoint. Windows 11 has strict hardware requirements, so I used registry modifications to bypass the TPM and Secure Boot checks. Once the VM was running, I disabled Windows Defender completely since I needed to test malware detection without interference from built-in antivirus.
+
+![alt text](winvm.png)
 
 **Deploying Cloud Infrastructure**
 
@@ -97,7 +99,9 @@ I configured firewall rules to open the necessary ports for agent communication:
 
 **Installing the Wazuh Agent**
 
-On my Windows 11 VM, I installed the Wazuh agent and configured it to point to my Wazuh server's IP address. After starting the agent service, I verified the agent appeared in the Wazuh dashboard as "socautomation".
+On my Windows 11 VM, I installed the Wazuh agent and configured it to point to my Wazuh server's IP address.
+
+![agent](wazuh-agents.png)
 
 **Configuring Log Archiving**
 
@@ -105,9 +109,11 @@ I modified the Wazuh configuration to enable comprehensive log archiving, ensuri
 
 ### Phase 4: Creating Custom Detection Rules
 
-I created a custom detection rule (ID: 100002) to detect Mimikatz execution. The rule monitors Sysmon Event ID 10 (Process Access) events and triggers when it detects the Mimikatz executable being accessed. I mapped this detection to MITRE ATT&CK technique T1003 (OS Credential Dumping).
+I created a custom detection rule to detect Mimikatz execution. The rule monitors Sysmon Event ID 10 (Process Access) events and triggers when it detects the Mimikatz executable being accessed. I mapped this detection to MITRE ATT&CK technique.
 
 After creating the rule in `/var/ossec/etc/rules/local_rules.xml` and restarting the Wazuh manager, I tested it by running Mimikatz on my Windows VM. The alert appeared successfully in the wazuh-alerts index.
+
+![wazuh](wazuh-alerts.png)
 
 ### Phase 5: Deploying TheHive
 
@@ -129,7 +135,11 @@ Once TheHive was running, I created a new organization called "SocAutmation" for
 
 Both accounts were given the analyst profile to create and manage alerts.
 
+![alt text](the-hive-1.png)
+
 ### Phase 6: Building the Shuffle Workflow
+
+![Shuffle Topology](shuffle.png)
 
 **Setting Up the Webhook**
 
@@ -143,13 +153,9 @@ After restarting the Wazuh manager and running Mimikatz again, I confirmed the w
 
 ### Phase 7: Adding VirusTotal Enrichment
 
-**Getting an API Key**
-
-I signed up for a free VirusTotal account and generated an API key from my profile settings.
-
 **Configuring VirusTotal in Shuffle**
 
-I added the VirusTotal action to query file hash reputations. Since Sysmon Event ID 10 doesn't include file hashes by default, I manually calculated the Mimikatz SHA256 hash using PowerShell and used it in the workflow for testing purposes.
+I added the VirusTotal action to query file hash reputations. 
 
 When tested, VirusTotal returned results showing 64 out of 72 antivirus engines flagged the file as malicious.
 
@@ -168,6 +174,8 @@ I added the TheHive action to automatically create alerts. The action uses:
 
 The alert payload includes details from Wazuh, VirusTotal results, MITRE ATT&CK tags, severity levels, and host information.
 
+![alt text](hive-alert.png)
+
 ### Phase 9: Adding Email Notifications
 
 I added an email notification action to alert the SOC team when high-severity threats are detected. The email includes:
@@ -178,10 +186,12 @@ I added an email notification action to alert the SOC team when high-severity th
 
 ### Phase 10: End-to-End Testing
 
-With all components configured, I performed end-to-end testing:
+![Run Result on Shuffler](images/run-result.png)
+
+With all components configured, I performed an end-to-end testing:
 
 1. Executed Mimikatz on the Windows VM
-2. Verified Wazuh rule 100002 triggered
+2. Verified Wazuh rule triggered
 3. Confirmed Shuffle workflow executed successfully
 4. Validated VirusTotal returned threat intelligence
 5. Checked email notification was sent
@@ -192,4 +202,4 @@ With all components configured, I performed end-to-end testing:
 The complete detection and response workflow now runs automatically, transforming what would be a manual process into an instant, automated response.
 
 
-*Built as a hands-on learning project to demonstrate practical SOC automation skills*
+*Built as a hands-on learning project to demonstrate practical SOC automation skills, credit to MyDFIR for providing project outline and guiudance*
